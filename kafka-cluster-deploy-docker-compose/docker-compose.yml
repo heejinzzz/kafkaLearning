@@ -1,0 +1,91 @@
+version: "3"
+
+services:
+  zookeeper:
+    image: bitnami/zookeeper:3.8.0
+    container_name: zookeeper
+    user: "root"
+    ports:
+      - "2181:2181"
+    networks:
+      - kafka-cluster
+    environment:
+      - ALLOW_ANONYMOUS_LOGIN=yes
+      - ZOO_SERVER_ID=0
+    volumes:
+      - /data/dockerVolumes/kafka-cluster/zookeeper:/bitnami/zookeeper
+
+  kafka100:
+    image: bitnami/kafka:3.2.1
+    container_name: kafka100
+    user: "root"
+    ports:
+      - "9092:9092"
+    networks:
+      - kafka-cluster
+    environment:
+      - ALLOW_PLAINTEXT_LISTENER=yes
+      - KAFKA_CFG_BROKER_ID=0
+      - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:2181
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://kafka100:9092
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://127.0.0.1:9092
+    volumes:
+      - /data/dockerVolumes/kafka-cluster/kafka100:/bitnami/kafka
+    depends_on:
+      - zookeeper
+
+  kafka101:
+    image: bitnami/kafka:3.2.1
+    container_name: kafka101
+    user: "root"
+    ports:
+      - "9093:9092"
+    networks:
+      - kafka-cluster
+    environment:
+      - ALLOW_PLAINTEXT_LISTENER=yes
+      - KAFKA_CFG_BROKER_ID=1
+      - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:2181
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://kafka101:9092
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://127.0.0.1:9093
+    volumes:
+      - /data/dockerVolumes/kafka-cluster/kafka101:/bitnami/kafka
+    depends_on:
+      - zookeeper
+
+  kafka102:
+    image: bitnami/kafka:3.2.1
+    container_name: kafka102
+    user: "root"
+    ports:
+      - "9094:9092"
+    networks:
+      - kafka-cluster
+    environment:
+      - ALLOW_PLAINTEXT_LISTENER=yes
+      - KAFKA_CFG_BROKER_ID=2
+      - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:2181
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://kafka102:9092
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://127.0.0.1:9094
+    volumes:
+      - /data/dockerVolumes/kafka-cluster/kafka102:/bitnami/kafka
+    depends_on:
+      - zookeeper
+
+  kafdrop:
+    image: obsidiandynamics/kafdrop:3.30.0
+    container_name: kafdrop
+    ports:
+      - "9000:9000"
+    networks:
+      - kafka-cluster
+    environment:
+      KAFKA_BROKERCONNECT: PLAINTEXT://kafka100:9092,PLAINTEXT://kafka101:9092,PLAINTEXT://kafka102:9092
+      JVM_OPTS: "-Xms32M -Xmx64M"
+    depends_on:
+      - kafka100
+      - kafka101
+      - kafka102
+
+networks:
+  kafka-cluster:
